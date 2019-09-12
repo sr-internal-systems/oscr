@@ -5,7 +5,6 @@ oscr.utils
 This module implements utility methods for the API.
 """
 
-import multiprocessing
 import re
 
 from oscr.bias import TITLE_BIAS, FUNCTION_BIAS
@@ -13,30 +12,7 @@ from oscr.clients import DiscoverOrgClient, SalesforceClient
 from oscr.models import Account
 
 
-def run():
-    """ Collects and enriches accounts.
-
-    This method contains a mechanism to remove any duplicate contacts
-    from DiscoverOrg that may already exist in Salesforce. It also calls on the
-    method that sorts/cleans the contact list before it is written to Salesforce.
-    """
-    sfc: SalesforceClient = SalesforceClient()
-    doc: DiscoverOrgClient = DiscoverOrgClient()
-
-    accounts: generator = sfc.get_accounts()
-
-    try:
-        while accounts:
-            multiprocessing.Process(
-                target=_enrich, args=(sfc, doc, next(accounts))
-            ).start()
-    except StopIteration:
-        pass
-    finally:
-        del accounts
-
-
-def _enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
+def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
     """ Enriches a given account. """
     sf_contacts: list = [c for c in sfc.get_contacts(account)]
     do_contacts: list = [c for c in doc.get_contacts(account)]
