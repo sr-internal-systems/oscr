@@ -11,3 +11,6 @@ dumps
 logs
 
 .flake8
+
+build
+dist
