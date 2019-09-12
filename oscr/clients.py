@@ -116,7 +116,7 @@ class SalesforceClient:
                 }
             )
 
-        with open(f"dumps/{account.sfid}.json", "w+") as f:
+        with open(f"~/oscr_dumps/{account.sfid}.json", "w+") as f:
             raw = json.dumps(data)
             f.write(raw)
 
@@ -132,7 +132,7 @@ class SalesforceClient:
                 f"CONTACT DUMP\n"
             ) + json.dumps(data or [])
 
-            with open(f"logs/{uuid.uuid4()}", "w+") as f:
+            with open(f"~/oscr_logs/{uuid.uuid4()}", "w+") as f:
                 f.write(log)
         else:
             self.complete_enrichment(account)
