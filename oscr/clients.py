@@ -95,11 +95,6 @@ class SalesforceClient:
 
     def upload_contacts(self, account: Account, contacts: list):
         """ Writes given contacts to a given account in Salesforce. """
-        for contact in contacts:
-            for f in contact.get_fields():
-                if getattr(contact, f.name) is None:
-                    setattr(contact, f.name, "")
-
         data = []
         for contact in contacts:
             name = contact.name.split()
@@ -109,10 +104,10 @@ class SalesforceClient:
                     "OwnerId": account.prep,
                     "FirstName": name[0],
                     "LastName": name[1] if len(name) > 1 else "",
-                    "Title": contact.title,
-                    "Phone": contact.direct,
-                    "MobilePhone": contact.mobile,
-                    "Email": contact.email,
+                    "Title": contact.title or "",
+                    "Phone": contact.direct or "",
+                    "MobilePhone": contact.mobile or "",
+                    "Email": contact.email or "",
                 }
             )
 

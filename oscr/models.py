@@ -2,49 +2,50 @@
 oscr.models
 ~~~~~~~~~~~
 
-This module implements dataclass models for the system.
+This module implements data models.
 """
 
-from dataclasses import asdict, dataclass, fields
 
-
-@dataclass
 class Account:
-    sfid: str
-    doid: str
-    prep: str
+    def __init__(
+        self, sfid=None, doid=None, prep=None, name=None, domain=None, phone=None
+    ):
+        self.sfid: str = sfid
+        self.doid: str = doid
+        self.prep: str = prep
 
-    name: str
-    domain: str
-    phone: str
-
-    def get_dict(self):
-        return asdict(self)
-
-    def get_fields(self):
-        return fields(self)
+        self.name: str = name
+        self.domain: str = domain
+        self.phone: str = phone
 
 
-@dataclass
 class Contact:
-    account: str
-    sfid: str
+    def __init__(
+        self,
+        account=None,
+        sfid=None,
+        name=None,
+        title=None,
+        office=None,
+        direct=None,
+        mobile=None,
+        email=None,
+        rating=None,
+        priority=None,
+        status=None,
+    ):
+        self.account: str = account
+        self.sfid: str = sfid
 
-    name: str
-    title: str
+        self.name: str = name
+        self.title: str = title
 
-    office: str
-    direct: str
-    mobile: str
-    email: str
+        self.office: str = office
+        self.direct: str = direct
+        self.mobile: str = mobile
+        self.email: str = email
 
-    rating: int
-    priority: int
+        self.rating: int = rating
+        self.priority: int = priority
 
-    status: str
-
-    def get_dict(self):
-        return asdict(self)
-
-    def get_fields(self):
-        return fields(self)
+        self.status: str = status
