@@ -1,0 +1,13 @@
+.vscode
+
+*.pyc
+__pycache__
+
+.env
+
+oscr.egg-info
+
+dumps
+logs
+
+.flake8
