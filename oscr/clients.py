@@ -12,8 +12,9 @@ import uuid
 
 import requests as rq
 import simple_salesforce as ss
+from selenium import webdriver
 
-from oscr.models import Account, Contact
+from .models import Account, Contact
 
 
 class SalesforceClient:
@@ -23,12 +24,18 @@ class SalesforceClient:
     Salesforce API within the context of the OSCR system.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        username: str = None,
+        password: str = None,
+        security_token: str = None,
+        organization_id: str = None,
+    ):
         self.api: ss.Salesforce = ss.Salesforce(
-            username=os.getenv("SF_USERNAME"),
-            password=os.getenv("SF_PASSWORD"),
-            security_token=os.getenv("SF_TOKEN"),
-            organizationId=os.getenv("SF_ORG_ID"),
+            username=username or os.getenv("SF_USERNAME"),
+            password=password or os.getenv("SF_PASSWORD"),
+            security_token=security_token or os.getenv("SF_TOKEN"),
+            organizationId=organization_id or os.getenv("SF_ORG_ID"),
         )
 
     def get_accounts(self):
@@ -50,8 +57,8 @@ class SalesforceClient:
             record: dict = records.pop(0)
 
             yield Account(
-                sfid=record.get("Id", ""),
-                doid=record.get("DSCORGPKG__DiscoverOrg_ID__c", ""),
+                salesforce_id=record.get("Id", ""),
+                discoverorg_id=record.get("DSCORGPKG__DiscoverOrg_ID__c", ""),
                 prep=record.get("Enrichment_Requested_By__c", "0050V000006j7Jj"),
                 name=record.get("Name", ""),
                 domain=record.get("Website", ""),
@@ -59,7 +66,10 @@ class SalesforceClient:
             )
 
     def get_contacts(self, account: Account):
-        """ Yields a generator of contacts for a given account. """
+        """ Yields a generator of contacts for a given account.
+
+        :param account: An `Account` object.
+        """
         sql: str = f"""
             SELECT
                 Id, Name, Title,
@@ -68,7 +78,7 @@ class SalesforceClient:
             FROM
                 Contact
             WHERE
-                AccountId = '{account.sfid}'
+                AccountId = '{account.salesforce_id}'
         """
         records: list = self.api.query_all(sql)["records"]
 
@@ -76,8 +86,8 @@ class SalesforceClient:
             record: dict = records.pop(0)
 
             yield Contact(
-                account=account.sfid,
-                sfid=record.get("Id", ""),
+                account=account.salesforce_id,
+                salesforce_id=record.get("Id", ""),
                 name=record.get("Name", ""),
                 title=record.get("Title", ""),
                 office=account.phone,
@@ -91,7 +101,7 @@ class SalesforceClient:
 
     def complete_enrichment(self, account: Account):
         """ Writes 'Enrichment_Complete__c' on a given account. """
-        self.api.Account.update(account.sfid, {"Enrichment_Complete__c": True})
+        self.api.Account.update(account.salesforce_id, {"Enrichment_Complete__c": True})
 
     def upload_contacts(self, account: Account, contacts: list):
         """ Writes given contacts to a given account in Salesforce. """
@@ -100,7 +110,7 @@ class SalesforceClient:
             name = contact.name.split()
             data.append(
                 {
-                    "AccountId": account.sfid,
+                    "AccountId": account.salesforce_id,
                     "OwnerId": account.prep,
                     "FirstName": name[0],
                     "LastName": name[1] if len(name) > 1 else "",
@@ -111,7 +121,7 @@ class SalesforceClient:
                 }
             )
 
-        with open(f"~/oscr_dumps/{account.sfid}.json", "w+") as f:
+        with open(f"~/oscr_dumps/{account.salesforce_id}.json", "w+") as f:
             raw = json.dumps(data)
             f.write(raw)
 
@@ -140,19 +150,19 @@ class DiscoverOrgClient:
     DiscoverOrg API within the context of the OSCR system.
     """
 
-    def __init__(self):
+    def __init__(self, username: str = None, password: str = None, key: str = None):
         self.base: str = "https://papi.discoverydb.com/papi"
 
-        self.username: str = os.getenv("DO_KEY")
-        self.password: str = os.getenv("DO_PASSWORD")
-        self.key: str = os.getenv("DO_USERNAME")
+        self.username: str = username or os.getenv("DO_KEY")
+        self.password: str = password or os.getenv("DO_PASSWORD")
+        self.key: str = key or os.getenv("DO_USERNAME")
 
         self.session: str = self._get_session()
 
     def _get_session(self):
         """ Gets a session key.
 
-        :return `session`: A `str` session key.
+        :return session: A `str` session key.
         """
         url: str = "".join([self.base, "/login"])
         headers: dict = {"Content-Type": "application/json"}
@@ -195,8 +205,8 @@ class DiscoverOrgClient:
             record = records.pop(0)
 
             yield Contact(
-                account=account.sfid,
-                sfid="",
+                account=account.salesforce_id,
+                salesforce_id="",
                 name=record.get("fullName"),
                 title=record.get("title"),
                 office=account.phone,
@@ -207,3 +217,34 @@ class DiscoverOrgClient:
                 priority=10,
                 status="new",
             )
+
+
+class LinkedInClient:
+    """ Implements the `LinkedInClient` class.
+
+    This class provides a high-level interface for collecting data
+    via a system of web scrapers/drivers.
+    """
+
+    def __init__(self, username: str = None, password: str = None):
+        self.driver: webdriver = webdriver.Chrome()
+
+        username: str = username or os.getenv("LI_USERNAME")
+        password: str = password or os.getenv("LI_PASSWORD")
+        self._login(username, password)
+
+    def _login(self, username: str, password: str):
+        """ Logs into LinkedIn via a Selenium ChromeDriver.
+
+        :param username: A valid `str` LinkedIn username.
+        :param password: A valid `str` LinkedIn password.
+        """
+        self.driver.get("https://www.linkedin.com/login")
+
+        username_input = self.driver.find_element_by_id("username")
+        password_input = self.driver.find_element_by_id("password")
+
+        username_input.send_keys(username)
+        password_input.send_keys(password)
+
+        password_input.submit()

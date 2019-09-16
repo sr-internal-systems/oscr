@@ -59,7 +59,7 @@ def _filter(contacts: list):
                 contact.priority = i
                 break
 
-    contacts = sorted(contacts, key=lambda contact: contact.rating + contact.priority)
+    contacts = sorted(contacts, key=lambda c: c.rating + c.priority)
     contacts = contacts[: int(len(contacts) / 3)] if len(contacts) >= 45 else contacts
 
     return contacts

@@ -8,10 +8,16 @@ This module implements data models.
 
 class Account:
     def __init__(
-        self, sfid=None, doid=None, prep=None, name=None, domain=None, phone=None
+        self,
+        salesforce_id=None,
+        discoverorg_id=None,
+        prep=None,
+        name=None,
+        domain=None,
+        phone=None,
     ):
-        self.sfid: str = sfid
-        self.doid: str = doid
+        self.salesforce_id: str = salesforce_id
+        self.discoverorg_id: str = discoverorg_id
         self.prep: str = prep
 
         self.name: str = name
@@ -23,7 +29,7 @@ class Contact:
     def __init__(
         self,
         account=None,
-        sfid=None,
+        salesforce_id=None,
         name=None,
         title=None,
         office=None,
@@ -35,7 +41,7 @@ class Contact:
         status=None,
     ):
         self.account: str = account
-        self.sfid: str = sfid
+        self.salesforce_id: str = salesforce_id
 
         self.name: str = name
         self.title: str = title

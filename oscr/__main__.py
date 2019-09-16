@@ -6,6 +6,7 @@ This module implements the the system's main script.
 """
 
 import multiprocessing
+from typing import Iterator
 
 from oscr.clients import DiscoverOrgClient, SalesforceClient
 from oscr.utils import enrich
@@ -21,7 +22,7 @@ def run():
     sfc: SalesforceClient = SalesforceClient()
     doc: DiscoverOrgClient = DiscoverOrgClient()
 
-    accounts: generator = sfc.get_accounts()
+    accounts: Iterator = sfc.get_accounts()
 
     try:
         while accounts:
