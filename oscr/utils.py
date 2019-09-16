@@ -21,7 +21,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
     domains: list = [
         re.findall(r"@(\w.+)", c.email)[0] for c in sf_contacts
     ] + re.findall(
-        r"^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)", account.domain
+        r"^(?:https?://)?(?:[^@/\n]+@)?(?:www\.)?([^:/?\n]+)", account.domain
     )
 
     contacts: list = _filter(
@@ -61,5 +61,6 @@ def _filter(contacts: list):
 
     contacts = sorted(contacts, key=lambda c: c.rating + c.priority)
     contacts = contacts[: int(len(contacts) / 3)] if len(contacts) >= 45 else contacts
+    contacts = contacts[:100] if len(contacts) > 100 else contacts
 
     return contacts
