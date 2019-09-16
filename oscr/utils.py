@@ -17,6 +17,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
     sf_contacts: list = [c for c in sfc.get_contacts(account)]
     do_contacts: list = [c for c in doc.get_contacts(account)]
 
+    names: list = [c.name for c in sf_contacts]
     emails: list = [c.email for c in sf_contacts]
     domains: list = [
         re.findall(r"@(\w.+)", c.email)[0] for c in sf_contacts
@@ -31,6 +32,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
             if (
                 contact.email
                 and contact.email != ""
+                and contact.name not in names
                 and contact.email not in emails
                 and re.findall(r"@(\w.+)", contact.email)[0] not in domains
             )

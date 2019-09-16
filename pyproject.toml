@@ -5,7 +5,7 @@ description = "The Opinionated System for Contact Retrieval."
 authors = ["Elliott Maguire <e.maguire@smartrecruiters.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 requests = "^2.22"
 simple-salesforce = "^0.74.3"
 selenium = "^3.141"
