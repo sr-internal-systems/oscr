@@ -61,6 +61,6 @@ def _filter(contacts: list):
 
     contacts = sorted(contacts, key=lambda c: c.rating + c.priority)
     contacts = contacts[: int(len(contacts) / 3)] if len(contacts) >= 45 else contacts
-    contacts = contacts[:100] if len(contacts) > 100 else contacts
+    contacts = contacts[:100] if len(contacts) > 50 else contacts
 
     return contacts
