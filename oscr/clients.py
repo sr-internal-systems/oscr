@@ -8,7 +8,6 @@ This module contains the `SalesforceClient` and `DiscoverOrgClient` classes.
 import datetime
 import json
 import os
-import uuid
 
 import requests as rq
 import simple_salesforce as ss
@@ -24,18 +23,12 @@ class SalesforceClient:
     Salesforce API within the context of the OSCR system.
     """
 
-    def __init__(
-        self,
-        username: str = None,
-        password: str = None,
-        security_token: str = None,
-        organization_id: str = None,
-    ):
+    def __init__(self):
         self.api: ss.Salesforce = ss.Salesforce(
-            username=username or os.getenv("SF_USERNAME"),
-            password=password or os.getenv("SF_PASSWORD"),
-            security_token=security_token or os.getenv("SF_TOKEN"),
-            organizationId=organization_id or os.getenv("SF_ORG_ID"),
+            username=os.getenv("SF_USERNAME"),
+            password=os.getenv("SF_PASSWORD"),
+            security_token=os.getenv("SF_TOKEN"),
+            organizationId=os.getenv("SF_ORG_ID"),
         )
 
     def get_accounts(self):
@@ -121,14 +114,10 @@ class SalesforceClient:
                 }
             )
 
-        with open(f"~/oscr_dumps/{account.salesforce_id}.json", "w+") as f:
-            raw = json.dumps(data)
-            f.write(raw)
-
         try:
             self.api.bulk.Contact.insert(data)
         except ss.SalesforceError as e:
-            log: str = (
+            print(
                 f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                 " - CONTACT WRITE FAILURE\n"
                 "* * * * * * * * * *\n"
@@ -136,9 +125,6 @@ class SalesforceClient:
                 "* * * * * * * * * *\n"
                 f"CONTACT DUMP\n"
             ) + json.dumps(data or [])
-
-            with open(f"~/oscr_logs/{uuid.uuid4()}", "w+") as f:
-                f.write(log)
         else:
             self.complete_enrichment(account)
 
@@ -150,12 +136,12 @@ class DiscoverOrgClient:
     DiscoverOrg API within the context of the OSCR system.
     """
 
-    def __init__(self, username: str = None, password: str = None, key: str = None):
+    def __init__(self):
         self.base: str = "https://papi.discoverydb.com/papi"
 
-        self.username: str = username or os.getenv("DO_KEY")
-        self.password: str = password or os.getenv("DO_PASSWORD")
-        self.key: str = key or os.getenv("DO_USERNAME")
+        self.username: str = os.getenv("DO_USERNAME")
+        self.password: str = os.getenv("DO_PASSWORD")
+        self.key: str = os.getenv("DO_KEY")
 
         self.session: str = self._get_session()
 
@@ -166,11 +152,7 @@ class DiscoverOrgClient:
         """
         url: str = "".join([self.base, "/login"])
         headers: dict = {"Content-Type": "application/json"}
-        data: dict = {
-            "username": self.username,
-            "password": self.password,
-            "partnerKey": self.key,
-        }
+        data: dict = {"username": self.username, "password": self.password, "partnerKey": self.key}
 
         response: rq.Response = rq.post(url, headers=headers, data=json.dumps(data))
         session = response.headers.get("X-AUTH-TOKEN")

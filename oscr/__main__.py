@@ -5,7 +5,6 @@ oscr.main
 This module implements the the system's main script.
 """
 
-import multiprocessing
 from typing import Iterator
 
 from oscr.clients import DiscoverOrgClient, SalesforceClient
@@ -26,9 +25,7 @@ def run():
 
     try:
         while accounts:
-            multiprocessing.Process(
-                target=enrich, args=(sfc, doc, next(accounts))
-            ).start()
+            enrich(sfc, doc, next(accounts))
     except StopIteration:
         pass
     finally:
