@@ -7,7 +7,7 @@ This module implements utility methods for the API.
 
 import re
 
-from oscr.bias import TITLE_BIAS, FUNCTION_BIAS
+from oscr.bias import FUNCTION_BIAS, TITLE_BIAS
 from oscr.clients import DiscoverOrgClient, SalesforceClient
 from oscr.models import Account
 
@@ -19,10 +19,8 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
 
     names: list = [c.name for c in sf_contacts]
     emails: list = [c.email for c in sf_contacts]
-    domains: list = [
-        re.findall(r"@(\w.+)", c.email)[0] for c in sf_contacts
-    ] + re.findall(
-        r"^(?:https?://)?(?:[^@/\n]+@)?(?:www\.)?([^:/?\n]+)", account.domain
+    domains: list = [re.findall(r"@(\w.+)", c.email)[0] for c in sf_contacts if c.email] + re.findall(
+        r"^(?:https?://)?(?:[^@/\n]+@)?(?:www\.)?([^:/?\n]+)", account.domain or ""
     )
 
     contacts: list = _filter(
@@ -41,6 +39,8 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
 
     if contacts:
         sfc.upload_contacts(account, contacts)
+
+    sfc.complete_enrichment(account)
 
 
 def _filter(contacts: list):
