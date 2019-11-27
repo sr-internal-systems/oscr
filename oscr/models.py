@@ -7,7 +7,15 @@ This module implements data models.
 
 
 class Account:
-    def __init__(self, salesforce_id=None, discoverorg_id=None, prep=None, name=None, domain=None, phone=None):
+    def __init__(
+        self,
+        salesforce_id=None,
+        discoverorg_id=None,
+        prep=None,
+        name=None,
+        domain=None,
+        phone=None,
+    ):
         self.salesforce_id: str = salesforce_id
         self.discoverorg_id: str = discoverorg_id
         self.prep: str = prep

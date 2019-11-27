@@ -19,7 +19,9 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
 
     names: list = [c.name for c in sf_contacts]
     emails: list = [c.email for c in sf_contacts]
-    domains: list = [re.findall(r"@(\w.+)", c.email)[0] for c in sf_contacts if c.email] + re.findall(
+    domains: list = [
+        re.findall(r"@(\w.+)", c.email)[0] for c in sf_contacts if c.email
+    ] + re.findall(
         r"^(?:https?://)?(?:[^@/\n]+@)?(?:www\.)?([^:/?\n]+)", account.domain or ""
     )
 

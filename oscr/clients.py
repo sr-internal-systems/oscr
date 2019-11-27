@@ -152,7 +152,11 @@ class DiscoverOrgClient:
         """
         url: str = "".join([self.base, "/login"])
         headers: dict = {"Content-Type": "application/json"}
-        data: dict = {"username": self.username, "password": self.password, "partnerKey": self.key}
+        data: dict = {
+            "username": self.username,
+            "password": self.password,
+            "partnerKey": self.key,
+        }
 
         response: rq.Response = rq.post(url, headers=headers, data=json.dumps(data))
         session = response.headers.get("X-AUTH-TOKEN")
