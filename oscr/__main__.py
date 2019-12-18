@@ -8,8 +8,9 @@ This module implements the the system's main script.
 from logging import getLogger, info, INFO, warning, error
 from typing import Generator
 
-from oscr.clients import DiscoverOrgClient, SalesforceClient
 from oscr.utils import enrich
+from oscr.clients.discoverorg import DiscoverOrgClient
+from oscr.clients.salesforce import SalesforceClient
 
 
 def run():
