@@ -8,6 +8,8 @@ This module contains the `SalesforceClient` and `DiscoverOrgClient` classes.
 import datetime
 import json
 import os
+from logging import info, warning, error
+from typing import Generator
 
 import requests as rq
 import simple_salesforce as ss
@@ -31,7 +33,7 @@ class SalesforceClient:
             organizationId=os.getenv("SF_ORG_ID"),
         )
 
-    def get_accounts(self):
+    def get_accounts(self) -> Generator[Account, None, None]:
         """ Yields a generator of all accounts where enrichment is requested. """
         sql = """
             SELECT
@@ -45,6 +47,7 @@ class SalesforceClient:
                 Enrichment_Complete__c = False
         """
         records: list = self.api.query_all(sql)["records"]
+        info("Account records retrieved.")
 
         while records:
             record: dict = records.pop(0)
@@ -58,7 +61,7 @@ class SalesforceClient:
                 phone=record.get("Phone", ""),
             )
 
-    def get_contacts(self, account: Account):
+    def get_contacts(self, account: Account) -> Generator[Contact, None, None]:
         """ Yields a generator of contacts for a given account.
 
         :param account: An `Account` object.
@@ -74,6 +77,7 @@ class SalesforceClient:
                 AccountId = '{account.salesforce_id}'
         """
         records: list = self.api.query_all(sql)["records"]
+        info("Contact records retrieved.")
 
         while records:
             record: dict = records.pop(0)
@@ -92,12 +96,18 @@ class SalesforceClient:
                 status="old",
             )
 
-    def complete_enrichment(self, account: Account):
+    def complete_enrichment(self, account: Account) -> None:
         """ Writes 'Enrichment_Complete__c' on a given account. """
         self.api.Account.update(account.salesforce_id, {"Enrichment_Complete__c": True})
+        info(f"Enrichment completed for {account.name}.")
 
-    def upload_contacts(self, account: Account, contacts: list):
-        """ Writes given contacts to a given account in Salesforce. """
+    def upload_info(self, account: Account, info: str) -> None:
+        """ Writes a company info string to a given account. """
+        self.api.Account.update(account.salesforce_id, {"Notes__c": info})
+        info(f"Company info uploaded for {account.name}.")
+
+    def upload_contacts(self, account: Account, contacts: list) -> None:
+        """ Writes given contacts to a given account. """
         data = []
         for contact in contacts:
             name = contact.name.split()
@@ -117,15 +127,9 @@ class SalesforceClient:
         try:
             self.api.bulk.Contact.insert(data)
         except ss.SalesforceError as e:
-            print(
-                f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-                " - CONTACT WRITE FAILURE\n"
-                "* * * * * * * * * *\n"
-                f"Salesforce Error: {e.message}\n"
-                "* * * * * * * * * *\n"
-                f"CONTACT DUMP\n"
-            ) + json.dumps(data or [])
+            error(f"Contact write failure for {account.name}. {e.message}")
         else:
+            info(f"Contacts uploaded for {account.name}.")
             self.complete_enrichment(account)
 
 
@@ -145,7 +149,7 @@ class DiscoverOrgClient:
 
         self.session: str = self._get_session()
 
-    def _get_session(self):
+    def _get_session(self) -> str:
         """ Gets a session key.
 
         :return session: A `str` session key.
@@ -159,36 +163,84 @@ class DiscoverOrgClient:
         }
 
         response: rq.Response = rq.post(url, headers=headers, data=json.dumps(data))
-        session = response.headers.get("X-AUTH-TOKEN")
+
+        session: str = response.headers.get("X-AUTH-TOKEN")
 
         return session
 
-    def get_contacts(self, account: Account):
+    def get_company_info(self, account: Account) -> str:
+        """ Gets company information for a given account. 
+        
+        This method retrieves the following fields:
+
+            Overview
+            Headquarters
+            Company Size
+            Revenue
+        
+        These values are formatted into a Salesforce field-friendly string
+        by a separate utility method.
+        """
+        url: str = "".join([self.base, "/v1/search/companies"])
+        headers: dict = {
+            "X-PARTNER-KEY": self.key,
+            "X-AUTH-TOKEN": self.session,
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+        data: str = json.dumps(
+            {
+                "companyCriteria": {
+                    "queryString": account.name,
+                    "queryStringApplication": ["NAME"],
+                    "websiteUrls": [account.domain],
+                }
+            }
+        )
+
+        response: rq.Response = rq.post(url, headers=headers, data=data)
+
+        if response.status_code == 200:
+            info(f"Company info records retrieved for {account.name}.")
+            data: dict = json.loads(response.text)
+            records: list = data.get("content", [])
+        else:
+            warning(f"Couldn't retrieve company info records for {account.name}.")
+            records: list = []
+
+        if len(records) > 0:
+            return records[0]
+        else:
+            return None
+
+    def get_contacts(self, account: Account) -> Contact:
         """ Yields a generator of available contacts for a given account.
 
         This method contains a regular expression to stop the yielding of contacts
         whose email addresses aren't on the exact domain of the account, but might
         be substrings of that domain.
         """
-        response: rq.Response = rq.post(
-            url="".join([self.base, "/v1/search/persons"]),
-            headers={
-                "X-PARTNER-KEY": self.key,
-                "X-AUTH-TOKEN": self.session,
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            data=json.dumps({"companyCriteria": {"websiteUrls": [account.domain]}}),
-        )
+        url: str = "".join([self.base, "/v1/search/persons"])
+        headers: dict = {
+            "X-PARTNER-KEY": self.key,
+            "X-AUTH-TOKEN": self.session,
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+        data: str = json.dumps({"companyCriteria": {"websiteUrls": [account.domain]}})
+
+        response: rq.Response = rq.post(url=url, headers=headers, data=data)
 
         if response.status_code == 200:
-            data = json.loads(response.text)
-            records = data.get("content", [])
+            info(f"Contact records retrieved for {account.name}.")
+            data: dict = json.loads(response.text)
+            records: list = data.get("content", [])
         else:
-            records = []
+            warning(f"Couldn't retrieve contact records for {account.name}.")
+            records: list = []
 
         while records:
-            record = records.pop(0)
+            record: dict = records.pop(0)
 
             yield Contact(
                 account=account.salesforce_id,
