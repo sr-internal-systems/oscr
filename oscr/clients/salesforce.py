@@ -6,7 +6,7 @@ This module contains a high-level Salesforce API client class.
 """
 
 import os
-from logging import info
+from logging import info, error
 
 from oscr.models import Account, Contact
 
