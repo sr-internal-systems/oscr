@@ -6,6 +6,8 @@ This module implements utility methods for the API.
 """
 
 import re
+from time import strftime, strptime
+from datetime import datetime
 from logging import info, error
 
 from oscr.bias import FUNCTION_BIAS, TITLE_BIAS
@@ -20,7 +22,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
     info_str = format_company_info(raw_info) if raw_info else None
 
     if info_str:
-        sfc.upload_info(account, info)
+        sfc.upload_info(account, info_str)
 
     sf_contacts: list = [c for c in sfc.get_contacts(account)]
     do_contacts: list = [c for c in doc.get_contacts(account)]
@@ -82,24 +84,25 @@ def _filter(contacts: list) -> list:
 
 def format_company_info(info_dict):
     """ Produces a field-friendly string from a dictionary of company data. """
-    overview: str = info_dict.get("overview")
-    size: str = info_dict.get("numEmployees")
-    revenue: str = info_dict.get("revenues")
+    overview: str = info_dict.get("description", "<i>Not found.</i>")
+    size: str = info_dict.get("numEmployees", "<i>Not found.</i>")
+    revenue: str = info_dict.get("revenues", "<i>Not found.</i>")
     location: dict = info_dict.get("location")
     headquarters: str = ", ".join(
         [
-            {location.get("city")},
-            {location.get("stateProvinceRegion")},
-            {location.get("countryName")},
+            location.get("city", "<i>N/A</i>"),
+            location.get("stateProvinceRegion", "<i>N/A</i>"),
+            location.get("countryName", "<i>N/A</i>"),
         ]
     )
 
-    info_str: str = "\n".join(
+    info_str: str = "<br>".join(
         [
-            f"Overview: {overview}",
-            f"Size: {size}",
-            f"Revenue: {revenue}",
-            f"Headquarters: {headquarters}",
+            f"<b>Updated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"<b>Overview:</b> {overview}",
+            f"<b>Size:</b> {size}",
+            f"<b>Revenue:</b> {revenue}",
+            f"<b>Headquarters:</b> {headquarters}",
         ]
     )
 
