@@ -97,9 +97,11 @@ class SalesforceClient:
         self.api.Account.update(account.salesforce_id, {"Enrichment_Complete__c": True})
         info(f"Enrichment completed for {account.name}.")
 
-    def upload_info(self, account: Account, info_str: str) -> None:
+    def upload_notes(self, account: Account, company_info: str, summary: str) -> None:
         """ Writes a company info string to a given account. """
-        self.api.Account.update(account.salesforce_id, {"Notes__c": info_str})
+        notes = "<br><br>".join([company_info, summary])
+
+        self.api.Account.update(account.salesforce_id, {"Notes__c": notes})
         info(f"Company info uploaded for {account.name}.")
 
     def upload_contacts(self, account: Account, contacts: list) -> None:
