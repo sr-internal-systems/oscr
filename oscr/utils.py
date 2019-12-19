@@ -87,7 +87,7 @@ def format_company_info(info_dict):
     """ Produces a field-friendly string from a dictionary of company data. """
     overview: str = info_dict.get("description", "<i>Not found.</i>")
     size: str = info_dict.get("numEmployees", "<i>Not found.</i>")
-    revenue: str = info_dict.get("revenues", "<i>Not found.</i>")
+    revenue: str = info_dict.get("revenue", "<i>Not found.</i>")
     location: dict = info_dict.get("location")
     headquarters: str = ", ".join(
         [
@@ -101,8 +101,8 @@ def format_company_info(info_dict):
         [
             f"<b>Updated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}<br>",
             f"<b>Overview:</b> {overview}",
-            f"<b>Size:</b> {size}",
-            f"<b>Revenue:</b> {revenue}",
+            f"<b>Size:</b> {size:,}",
+            f"<b>Revenue:</b> {revenue:,}",
             f"<b>Headquarters:</b> {headquarters}",
         ]
     )
@@ -127,8 +127,10 @@ def format_enrichment_summary(sf_contacts: list, do_contacts: list, contacts: li
             f"<b># of Contacts Added:</b> {n_contacts_added}",
             f"<b>Average Rating:</b> {avg_rating}",
             f"<b>Average Priority:</b> {avg_priority}",
-            "<br><i>Rating and priority are the measures by which OSCR qualifies contacts.</i>"
-            "The lower the numbers, the better the quality of the contacts added.",
+            "<br><i>Rating and priority are the measures by which OSCR qualifies contacts. "
+            "The lower the numbers, the better the quality of the contacts added.</i>",
+            "<br><b>Contacts Added:</b>",
+            ", ".join([contact.name for contact in contacts]),
         ]
     )
 
