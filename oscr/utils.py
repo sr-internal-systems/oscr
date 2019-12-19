@@ -9,8 +9,9 @@ import re
 from logging import info, error
 
 from oscr.bias import FUNCTION_BIAS, TITLE_BIAS
-from oscr.clients import DiscoverOrgClient, SalesforceClient
 from oscr.models import Account
+from oscr.clients.discoverorg import DiscoverOrgClient
+from oscr.clients.salesforce import SalesforceClient
 
 
 def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> None:
