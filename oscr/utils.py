@@ -6,14 +6,22 @@ This module implements utility methods for the API.
 """
 
 import re
+from logging import info, error
 
 from oscr.bias import FUNCTION_BIAS, TITLE_BIAS
 from oscr.clients import DiscoverOrgClient, SalesforceClient
 from oscr.models import Account
 
 
-def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
+def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> None:
     """ Enriches a given account. """
+    raw_info = doc.get_company_info(account)
+    info_str = format_company_info(raw_info) if raw_info else None
+
+    if info_str:
+        print("Upload info")
+        # sfc.upload_info(account, info)
+
     sf_contacts: list = [c for c in sfc.get_contacts(account)]
     do_contacts: list = [c for c in doc.get_contacts(account)]
 
@@ -40,12 +48,13 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
     )
 
     if contacts:
-        sfc.upload_contacts(account, contacts)
+        print("Upload contacts")
+        # sfc.upload_contacts(account, contacts)
 
     sfc.complete_enrichment(account)
 
 
-def _filter(contacts: list):
+def _filter(contacts: list) -> list:
     """ Filters a given list of contacts for writing to Salesforce.
 
     This method uses the 'Scarce' selection algorithm. Documentation of
@@ -63,8 +72,36 @@ def _filter(contacts: list):
                 contact.priority = i
                 break
 
-    contacts = sorted(contacts, key=lambda c: c.rating + c.priority)
-    contacts = contacts[: int(len(contacts) / 3)] if len(contacts) >= 45 else contacts
-    contacts = contacts[:100] if len(contacts) > 50 else contacts
+    contacts: list = sorted(contacts, key=lambda c: c.rating + c.priority)
+    contacts: list = contacts[: int(len(contacts) / 3)] if len(
+        contacts
+    ) >= 45 else contacts
+    contacts: list = contacts[:100] if len(contacts) > 50 else contacts
 
     return contacts
+
+
+def format_company_info(info_dict):
+    """ Produces a field-friendly string from a dictionary of company data. """
+    overview: str = info_dict.get("overview")
+    size: str = info_dict.get("numEmployees")
+    revenue: str = info_dict.get("revenues")
+    location: dict = info_dict.get("location")
+    headquarters: str = ", ".join(
+        [
+            {location.get("city")},
+            {location.get("stateProvinceRegion")},
+            {location.get("countryName")},
+        ]
+    )
+
+    info_str: str = "\n".join(
+        [
+            f"Overview: {overview}",
+            f"Size: {size}",
+            f"Revenue: {revenue}",
+            f"Headquarters: {headquarters}",
+        ]
+    )
+
+    return info_str
