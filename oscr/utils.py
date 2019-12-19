@@ -19,8 +19,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
     info_str = format_company_info(raw_info) if raw_info else None
 
     if info_str:
-        print("Upload info")
-        # sfc.upload_info(account, info)
+        sfc.upload_info(account, info)
 
     sf_contacts: list = [c for c in sfc.get_contacts(account)]
     do_contacts: list = [c for c in doc.get_contacts(account)]
@@ -48,8 +47,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
     )
 
     if contacts:
-        print("Upload contacts")
-        # sfc.upload_contacts(account, contacts)
+        sfc.upload_contacts(account, contacts)
 
     sfc.complete_enrichment(account)
 
