@@ -6,14 +6,22 @@ This module implements utility methods for the API.
 """
 
 import re
+from datetime import datetime
+from logging import info, error
+from statistics import mean
+from time import strftime, strptime
 
 from oscr.bias import FUNCTION_BIAS, TITLE_BIAS
-from oscr.clients import DiscoverOrgClient, SalesforceClient
 from oscr.models import Account
+from oscr.clients.discoverorg import DiscoverOrgClient
+from oscr.clients.salesforce import SalesforceClient
 
 
-def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
+def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> None:
     """ Enriches a given account. """
+    raw_info = doc.get_company_info(account)
+    company_info = format_company_info(raw_info) if raw_info else None
+
     sf_contacts: list = [c for c in sfc.get_contacts(account)]
     do_contacts: list = [c for c in doc.get_contacts(account)]
 
@@ -42,10 +50,13 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account):
     if contacts:
         sfc.upload_contacts(account, contacts)
 
-    sfc.complete_enrichment(account)
+    summary = format_enrichment_summary(sf_contacts, do_contacts, contacts)
+
+    if company_info and summary:
+        sfc.upload_notes(account, company_info, summary)
 
 
-def _filter(contacts: list):
+def _filter(contacts: list) -> list:
     """ Filters a given list of contacts for writing to Salesforce.
 
     This method uses the 'Scarce' selection algorithm. Documentation of
@@ -63,8 +74,64 @@ def _filter(contacts: list):
                 contact.priority = i
                 break
 
-    contacts = sorted(contacts, key=lambda c: c.rating + c.priority)
-    contacts = contacts[: int(len(contacts) / 3)] if len(contacts) >= 45 else contacts
-    contacts = contacts[:100] if len(contacts) > 50 else contacts
+    contacts: list = sorted(contacts, key=lambda c: c.rating + c.priority)
+    contacts: list = contacts[: int(len(contacts) / 3)] if len(
+        contacts
+    ) >= 45 else contacts
+    contacts: list = contacts[:100] if len(contacts) > 50 else contacts
 
     return contacts
+
+
+def format_company_info(info_dict):
+    """ Produces a field-friendly string from a dictionary of company data. """
+    overview: str = info_dict.get("description", "<i>Not found.</i>")
+    size: str = info_dict.get("numEmployees", "<i>Not found.</i>")
+    revenue: str = info_dict.get("revenue", "<i>Not found.</i>")
+    location: dict = info_dict.get("location")
+    headquarters: str = ", ".join(
+        [
+            location.get("city", "<i>N/A</i>"),
+            location.get("stateProvinceRegion", "<i>N/A</i>"),
+            location.get("countryName", "<i>N/A</i>"),
+        ]
+    )
+
+    info_str: str = "<br>".join(
+        [
+            f"<b>Updated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}<br>",
+            f"<b>Overview:</b> {overview}",
+            f"<b>Size:</b> {size:,}",
+            f"<b>Revenue:</b> {revenue:,}",
+            f"<b>Headquarters:</b> {headquarters}",
+        ]
+    )
+
+    return info_str
+
+
+def format_enrichment_summary(sf_contacts: list, do_contacts: list, contacts: list):
+    """ Produces a field-friendly string summarizing the enrichment process. """
+    n_sf_contacts = len(sf_contacts)
+    n_do_contacts = len(do_contacts)
+    n_contacts_added = len(contacts)
+
+    avg_rating = round(mean([c.rating for c in contacts]), 2)
+    avg_priority = round(mean([c.priority for c in contacts]), 2)
+
+    summary = "<br>".join(
+        [
+            f"<b># of Contacts in Salesforce Before:</b> {n_sf_contacts}",
+            f"<b># of Contacts in Salesforce After:</b> {n_sf_contacts + n_contacts_added}",
+            f"<b># of Contact Available:</b> {n_do_contacts}",
+            f"<b># of Contacts Added:</b> {n_contacts_added}",
+            f"<b>Average Rating:</b> {avg_rating}",
+            f"<b>Average Priority:</b> {avg_priority}",
+            "<br><i>Rating and priority are the measures by which OSCR qualifies contacts. "
+            "The lower the numbers, the better the quality of the contacts added.</i>",
+            "<br><b>Contacts Added:</b>",
+            ", ".join([contact.name for contact in contacts]),
+        ]
+    )
+
+    return summary
