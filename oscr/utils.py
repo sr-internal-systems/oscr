@@ -116,8 +116,9 @@ def format_enrichment_summary(sf_contacts: list, do_contacts: list, contacts: li
     n_do_contacts = len(do_contacts)
     n_contacts_added = len(contacts)
 
-    avg_rating = round(mean([c.rating for c in contacts]), 2)
-    avg_priority = round(mean([c.priority for c in contacts]), 2)
+    if len(contacts) > 0:
+        avg_rating = round(mean([c.rating for c in contacts]), 2)
+        avg_priority = round(mean([c.priority for c in contacts]), 2)
 
     summary = "<br>".join(
         [
