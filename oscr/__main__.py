@@ -5,7 +5,7 @@ oscr.main
 This module implements the the system's main script.
 """
 
-from logging import getLogger, info, INFO, warning, error
+from logging import getLogger, info, INFO
 from typing import Generator
 
 from oscr.utils import enrich

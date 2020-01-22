@@ -7,7 +7,7 @@ This module contains a high-level DiscoverOrg API client class.
 
 import json
 import os
-from logging import info, warning, error
+from logging import info, warning
 
 from oscr.models import Account, Contact
 
@@ -19,6 +19,10 @@ class DiscoverOrgClient:
 
     This class contains a high-level controlled interface for interacting with the
     DiscoverOrg API within the context of the OSCR system.
+
+    It requires the presence of a username, password, and partner key in order to
+    start a session with the API. Those values must be stored in environment variables
+    `DO_USERNAME`, `DO_PASSWORD`, and `DO_KEY`, respectively.
     """
 
     def __init__(self):
@@ -33,7 +37,7 @@ class DiscoverOrgClient:
     def _get_session(self) -> str:
         """ Gets a session key.
 
-        :return session: A `str` session key.
+        :return: A `str` session key.
         """
         url: str = "".join([self.base, "/login"])
         headers: dict = {"Content-Type": "application/json"}
@@ -61,6 +65,8 @@ class DiscoverOrgClient:
         
         These values are formatted into a Salesforce field-friendly string
         by a separate utility method.
+        
+        :param account: An `Account` object.
         """
         url: str = "".join([self.base, "/v1/search/companies"])
         headers: dict = {
@@ -100,6 +106,8 @@ class DiscoverOrgClient:
         This method contains a regular expression to stop the yielding of contacts
         whose email addresses aren't on the exact domain of the account, but might
         be substrings of that domain.
+
+        :param account: An `Account` object.
         """
         url: str = "".join([self.base, "/v1/search/persons"])
         headers: dict = {
