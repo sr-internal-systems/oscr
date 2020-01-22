@@ -3,6 +3,8 @@ oscr.clients.linkedin
 ~~~~~~~~~~~~~~~~~~~~~
 
 This module contains a high-level LinkedIn scraping API class.
+
+This is an incomplete experimental module. It should not be used in production.
 """
 
 import os

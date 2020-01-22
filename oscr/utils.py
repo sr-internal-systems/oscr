@@ -7,9 +7,9 @@ This module implements utility methods for the API.
 
 import re
 from datetime import datetime
-from logging import info, error
+from logging import info
 from statistics import mean
-from time import strftime, strptime
+from time import strftime
 
 from oscr.bias import FUNCTION_BIAS, TITLE_BIAS
 from oscr.models import Account
@@ -18,9 +18,14 @@ from oscr.clients.salesforce import SalesforceClient
 
 
 def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> None:
-    """ Enriches a given account. """
-    raw_info = doc.get_company_info(account)
-    company_info = format_company_info(raw_info) if raw_info else None
+    """ Enriches a given account. 
+    
+    :param sfc: A `SalesforceClient` instance.
+    :param doc: A `DiscoverOrgClient` instance.
+    :param account: An `Account` object.
+    """
+    raw_info: dict = doc.get_company_info(account)
+    company_info: str = format_company_info(raw_info) if raw_info else None
 
     sf_contacts: list = [c for c in sfc.get_contacts(account)]
     do_contacts: list = [c for c in doc.get_contacts(account)]
@@ -50,7 +55,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
     if contacts:
         sfc.upload_contacts(account, contacts)
 
-    summary = format_enrichment_summary(sf_contacts, do_contacts, contacts)
+    summary: str = format_enrichment_summary(sf_contacts, do_contacts, contacts)
 
     if company_info and summary:
         sfc.upload_notes(account, company_info, summary)
@@ -61,6 +66,9 @@ def _filter(contacts: list) -> list:
 
     This method uses the 'Scarce' selection algorithm. Documentation of
     this algorithm can be found in the `docs` section of the main OSCR repository.
+
+    :param contacts: A `list` of `Contact` objects.
+    :return: A filtered `list` of `Contact` objects.
     """
     for contact in contacts:
         for i, group in enumerate(TITLE_BIAS):
@@ -84,7 +92,12 @@ def _filter(contacts: list) -> list:
 
 
 def format_company_info(info_dict):
-    """ Produces a field-friendly string from a dictionary of company data. """
+    """ Produces a field-friendly string from a dictionary of company data. 
+    
+    :param info_dict: A `dict` of company info produced by the 
+                      `DiscoverOrgClient`'s `get_company_info` function.
+    :return: A formatted `str` of company info.
+    """
     overview: str = info_dict.get("description", "<i>Not found.</i>")
     size: str = info_dict.get("numEmployees", "<i>Not found.</i>")
     revenue: str = info_dict.get("revenue", "<i>Not found.</i>")
@@ -110,8 +123,18 @@ def format_company_info(info_dict):
     return info_str
 
 
-def format_enrichment_summary(sf_contacts: list, do_contacts: list, contacts: list):
-    """ Produces a field-friendly string summarizing the enrichment process. """
+def format_enrichment_summary(
+    sf_contacts: list, do_contacts: list, contacts: list
+) -> str:
+    """ Produces a field-friendly string summarizing the enrichment process. 
+    
+    :param sf_contacts: A `list` of `Contact` objects produced by the
+                        `SalesforceClient`'s `get_contacts` function.
+    :param do_contacts: A `list` of `Contact` objects produced by the
+                        `DiscoverOrgClient`'s `get_contacts` function.
+    :param contacts: A `list` of the finalized filtered `Contact` objects.
+    :return: A formatted `str` enrichment summary.
+    """
     n_sf_contacts = len(sf_contacts)
     n_do_contacts = len(do_contacts)
     n_contacts_added = len(contacts)

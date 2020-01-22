@@ -5,53 +5,37 @@ oscr.models
 This module implements data models.
 """
 
+from dataclasses import dataclass
 
+
+@dataclass
 class Account:
-    def __init__(
-        self,
-        salesforce_id=None,
-        discoverorg_id=None,
-        prep=None,
-        name=None,
-        domain=None,
-        phone=None,
-    ):
-        self.salesforce_id: str = salesforce_id
-        self.discoverorg_id: str = discoverorg_id
-        self.prep: str = prep
+    """ Models an `Account` object that parallels some Salesforce fields. """
 
-        self.name: str = name
-        self.domain: str = domain
-        self.phone: str = phone
+    salesforce_id: str
+    discoverorg_id: str
+    prep: str
+    name: str
+    domain: str
+    phone: str
 
 
+@dataclass
 class Contact:
-    def __init__(
-        self,
-        account=None,
-        salesforce_id=None,
-        name=None,
-        title=None,
-        office=None,
-        direct=None,
-        mobile=None,
-        email=None,
-        rating=None,
-        priority=None,
-        status=None,
-    ):
-        self.account: str = account
-        self.salesforce_id: str = salesforce_id
+    """ Models a `Contact` object that parallels some Salesforce fields. """
 
-        self.name: str = name
-        self.title: str = title
+    account: str
+    salesforce_id: str
 
-        self.office: str = office
-        self.direct: str = direct
-        self.mobile: str = mobile
-        self.email: str = email
+    name: str
+    title: str
 
-        self.rating: int = rating
-        self.priority: int = priority
+    office: str
+    direct: str
+    mobile: str
+    email: str
 
-        self.status: str = status
+    rating: int
+    priority: int
+
+    status: str
