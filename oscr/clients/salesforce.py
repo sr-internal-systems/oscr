@@ -85,7 +85,6 @@ class SalesforceClient:
                 AccountId = '{account.salesforce_id}'
         """
         records: list = self.api.query_all(sql)["records"]
-        info("Contact records retrieved.")
 
         while records:
             record: dict = records.pop(0)
