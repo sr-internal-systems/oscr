@@ -60,6 +60,9 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
     if company_info and summary:
         sfc.upload_notes(account, company_info, summary)
 
+    if contacts and company_info and summary:
+        sfc.complete_enrichment(account)
+
 
 def _filter(contacts: list) -> list:
     """ Filters a given list of contacts for writing to Salesforce.
