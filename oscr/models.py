@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Account:
-    """ Models an `Account` object that parallels some Salesforce fields. """
+    """ Model an `Account` object that parallels some Salesforce fields. """
 
     salesforce_id: str
     discoverorg_id: str
@@ -22,7 +22,7 @@ class Account:
 
 @dataclass
 class Contact:
-    """ Models a `Contact` object that parallels some Salesforce fields. """
+    """ Model a `Contact` object that parallels some Salesforce fields. """
 
     account: str
     salesforce_id: str
