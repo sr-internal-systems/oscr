@@ -18,7 +18,7 @@ from oscr.clients.salesforce import SalesforceClient
 
 
 def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> None:
-    """ Enriches a given account. 
+    """ Enrich a given account. 
     
     :param sfc: A `SalesforceClient` instance.
     :param doc: A `DiscoverOrgClient` instance.
@@ -65,7 +65,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
 
 
 def _filter(contacts: list) -> list:
-    """ Filters a given list of contacts for writing to Salesforce.
+    """ Filter a given list of contacts for writing to Salesforce.
 
     This method uses the 'Scarce' selection algorithm. Documentation of
     this algorithm can be found in the `docs` section of the main OSCR repository.
@@ -95,7 +95,7 @@ def _filter(contacts: list) -> list:
 
 
 def format_company_info(info_dict):
-    """ Produces a field-friendly string from a dictionary of company data. 
+    """ Produce a field-friendly string from a dictionary of company data. 
     
     :param info_dict: A `dict` of company info produced by the 
                       `DiscoverOrgClient`'s `get_company_info` function.
@@ -129,7 +129,7 @@ def format_company_info(info_dict):
 def format_enrichment_summary(
     sf_contacts: list, do_contacts: list, contacts: list
 ) -> str:
-    """ Produces a field-friendly string summarizing the enrichment process. 
+    """ Produce a field-friendly string summarizing the enrichment process. 
     
     :param sf_contacts: A `list` of `Contact` objects produced by the
                         `SalesforceClient`'s `get_contacts` function.

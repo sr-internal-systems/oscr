@@ -15,7 +15,7 @@ import requests as rq
 
 
 class DiscoverOrgClient:
-    """ Implements the `DiscoverOrgClient` class.
+    """ Implement the `DiscoverOrgClient` class.
 
     This class contains a high-level controlled interface for interacting with the
     DiscoverOrg API within the context of the OSCR system.
@@ -35,7 +35,7 @@ class DiscoverOrgClient:
         self.session: str = self._get_session()
 
     def _get_session(self) -> str:
-        """ Gets a session key.
+        """ Get a session key.
 
         :return: A `str` session key.
         """
@@ -54,7 +54,7 @@ class DiscoverOrgClient:
         return session
 
     def get_company_info(self, account: Account) -> str:
-        """ Gets company information for a given account. 
+        """ Get company information for a given account. 
         
         This method retrieves the following fields:
 
@@ -101,7 +101,7 @@ class DiscoverOrgClient:
             return None
 
     def get_contacts(self, account: Account) -> Contact:
-        """ Yields a generator of available contacts for a given account.
+        """ Yield a generator of available contacts for a given account.
 
         This method contains a regular expression to stop the yielding of contacts
         whose email addresses aren't on the exact domain of the account, but might
