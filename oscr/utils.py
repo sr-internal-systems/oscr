@@ -60,7 +60,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
     if company_info and summary:
         sfc.upload_notes(account, company_info, summary)
 
-    if contacts and company_info and summary:
+    if summary:
         sfc.complete_enrichment(account)
 
 
@@ -138,30 +138,33 @@ def format_enrichment_summary(
     :param contacts: A `list` of the finalized filtered `Contact` objects.
     :return: A formatted `str` enrichment summary.
     """
-    n_sf_contacts = len(sf_contacts)
-    n_do_contacts = len(do_contacts)
-    n_contacts_added = len(contacts)
+    if contacts:
+        n_sf_contacts = len(sf_contacts)
+        n_do_contacts = len(do_contacts)
+        n_contacts_added = len(contacts)
 
-    if len(contacts) > 0:
-        avg_rating = round(mean([c.rating for c in contacts]), 2)
-        avg_priority = round(mean([c.priority for c in contacts]), 2)
+        if len(contacts) > 0:
+            avg_rating = round(mean([c.rating for c in contacts]), 2)
+            avg_priority = round(mean([c.priority for c in contacts]), 2)
+        else:
+            avg_rating = "N/A"
+            avg_priority = "N/A"
+
+        summary = "<br>".join(
+            [
+                f"<b># of Contacts in Salesforce Before:</b> {n_sf_contacts}",
+                f"<b># of Contacts in Salesforce After:</b> {n_sf_contacts + n_contacts_added}",
+                f"<b># of Contact Available:</b> {n_do_contacts}",
+                f"<b># of Contacts Added:</b> {n_contacts_added}",
+                f"<b>Average Rating:</b> {avg_rating}",
+                f"<b>Average Priority:</b> {avg_priority}",
+                "<br><i>Rating and priority are the measures by which OSCR qualifies contacts. "
+                "The lower the numbers, the better the quality of the contacts added.</i>",
+                "<br><b>Contacts Added:</b>",
+                ", ".join([contact.name for contact in contacts]),
+            ]
+        )
     else:
-        avg_rating = "N/A"
-        avg_priority = "N/A"
-
-    summary = "<br>".join(
-        [
-            f"<b># of Contacts in Salesforce Before:</b> {n_sf_contacts}",
-            f"<b># of Contacts in Salesforce After:</b> {n_sf_contacts + n_contacts_added}",
-            f"<b># of Contact Available:</b> {n_do_contacts}",
-            f"<b># of Contacts Added:</b> {n_contacts_added}",
-            f"<b>Average Rating:</b> {avg_rating}",
-            f"<b>Average Priority:</b> {avg_priority}",
-            "<br><i>Rating and priority are the measures by which OSCR qualifies contacts. "
-            "The lower the numbers, the better the quality of the contacts added.</i>",
-            "<br><b>Contacts Added:</b>",
-            ", ".join([contact.name for contact in contacts]),
-        ]
-    )
+        summary = "<b>No contacts were available for retrieval.</b>"
 
     return summary
