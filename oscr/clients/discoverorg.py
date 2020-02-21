@@ -88,7 +88,6 @@ class DiscoverOrgClient:
         response: rq.Response = rq.post(url, headers=headers, data=data)
 
         if response.status_code == 200:
-            info(f"Company info records retrieved for {account.name}.")
             data: dict = json.loads(response.text)
             records: list = data.get("content", [])
         else:
@@ -121,7 +120,6 @@ class DiscoverOrgClient:
         response: rq.Response = rq.post(url=url, headers=headers, data=data)
 
         if response.status_code == 200:
-            info(f"Contact records retrieved for {account.name}.")
             data: dict = json.loads(response.text)
             records: list = data.get("content", [])
         else:
