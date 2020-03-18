@@ -103,14 +103,6 @@ class SalesforceClient:
                 status="old",
             )
 
-    def complete_enrichment(self, account: Account) -> None:
-        """ Write 'Enrichment_Complete__c' on a given account. 
-        
-        :param account: An `Account` object.
-        """
-        self.api.Account.update(account.salesforce_id, {"Enrichment_Complete__c": True})
-        info(f"Enrichment completed for {account.name}.")
-
     def upload_notes(self, account: Account, company_info: str, summary: str) -> None:
         """ Write a company info string to a given account. 
         
@@ -144,6 +136,7 @@ class SalesforceClient:
                     "Phone": contact.direct or "",
                     "MobilePhone": contact.mobile or "",
                     "Email": contact.email or "",
+                    "LeadSource": "DiscoverOrg",
                 }
             )
 
@@ -153,5 +146,12 @@ class SalesforceClient:
             error(f"Contact write failure for {account.name}. {e.message}")
         else:
             info(f"Contacts uploaded for {account.name}.")
-            self.complete_enrichment(account)
+
+    def complete_enrichment(self, account: Account) -> None:
+        """ Write 'Enrichment_Complete__c' on a given account. 
+        
+        :param account: An `Account` object.
+        """
+        self.api.Account.update(account.salesforce_id, {"Enrichment_Complete__c": True})
+        info(f"Enrichment completed for {account.name}.")
 

@@ -52,10 +52,10 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
         ]
     )
 
+    summary: str = format_enrichment_summary(sf_contacts, do_contacts, contacts)
+
     if contacts:
         sfc.upload_contacts(account, contacts)
-
-    summary: str = format_enrichment_summary(sf_contacts, do_contacts, contacts)
 
     if company_info and summary:
         sfc.upload_notes(account, company_info, summary)
@@ -77,12 +77,12 @@ def _filter(contacts: list) -> list:
         for i, group in enumerate(TITLE_BIAS):
             for title in group:
                 if title in contact.title.upper():
-                    contact.rating = i
+                    contact.rating: int = i
                     break
 
         for i, function in enumerate(FUNCTION_BIAS):
             if function in contact.title.upper():
-                contact.priority = i
+                contact.priority: int = i
                 break
 
     contacts: list = sorted(contacts, key=lambda c: c.rating + c.priority)
@@ -139,18 +139,18 @@ def format_enrichment_summary(
     :return: A formatted `str` enrichment summary.
     """
     if contacts:
-        n_sf_contacts = len(sf_contacts)
-        n_do_contacts = len(do_contacts)
-        n_contacts_added = len(contacts)
+        n_sf_contacts: int = len(sf_contacts)
+        n_do_contacts: int = len(do_contacts)
+        n_contacts_added: int = len(contacts)
 
         if len(contacts) > 0:
-            avg_rating = round(mean([c.rating for c in contacts]), 2)
-            avg_priority = round(mean([c.priority for c in contacts]), 2)
+            avg_rating: int = round(mean([c.rating for c in contacts]), 2)
+            avg_priority: int = round(mean([c.priority for c in contacts]), 2)
         else:
-            avg_rating = "N/A"
-            avg_priority = "N/A"
+            avg_rating: str = "N/A"
+            avg_priority: str = "N/A"
 
-        summary = "<br>".join(
+        summary: str = "<br>".join(
             [
                 f"<b># of Contacts in Salesforce Before:</b> {n_sf_contacts}",
                 f"<b># of Contacts in Salesforce After:</b> {n_sf_contacts + n_contacts_added}",
@@ -165,6 +165,6 @@ def format_enrichment_summary(
             ]
         )
     else:
-        summary = "<b>No contacts were available for retrieval.</b>"
+        summary: str = "<b>No contacts were available for retrieval.</b>"
 
     return summary
