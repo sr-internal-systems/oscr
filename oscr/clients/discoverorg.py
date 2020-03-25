@@ -129,17 +129,28 @@ class DiscoverOrgClient:
         while records:
             record: dict = records.pop(0)
 
+            name = record.get("fullName", "")
+            title = record.get("title", "")
+            direct = record.get("officeTelNumber", "")
+            mobile = record.get("mobileTelNumber", "")
+            email = record.get("email", "")
+
+            if "@" in email and email.split("@")[1] != account.domain:
+                continue
+
+            if not email and not direct and not mobile:
+                continue
+
             yield Contact(
                 account=account.salesforce_id,
                 salesforce_id="",
-                name=record.get("fullName"),
-                title=record.get("title"),
+                name=name,
+                title=title,
                 office=account.phone,
-                direct=record.get("officeTelNumber"),
-                mobile=record.get("mobileTelNumber"),
-                email=record.get("email"),
+                direct=direct,
+                mobile=mobile,
+                email=email,
                 rating=10,
                 priority=10,
                 status="new",
             )
-
