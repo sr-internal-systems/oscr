@@ -8,7 +8,7 @@ This module contains a high-level DiscoverOrg API client class.
 import json
 import os
 import time
-from logging import info, warning
+from logging import warning
 
 from oscr.models import Account, Contact
 

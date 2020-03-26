@@ -6,7 +6,7 @@ This module contains a high-level Salesforce API client class.
 """
 
 import os
-from logging import info, error
+from logging import error
 from typing import Generator
 
 from oscr.models import Account, Contact
@@ -54,9 +54,9 @@ class SalesforceClient:
                 Enrichment_Complete__c = False
         """
         records: list = self.api.query_all(sql)["records"]
-        info("Account records retrieved.")
 
-        while records:
+        count = 0
+        while records and count <= 100:
             record: dict = records.pop(0)
 
             yield Account(
@@ -69,6 +69,8 @@ class SalesforceClient:
                 domain=record.get("Website", ""),
                 phone=record.get("Phone", ""),
             )
+
+            count += 1
 
     def get_contacts(self, account: Account) -> Generator[Contact, None, None]:
         """ Yield a generator of contacts for a given account.
@@ -113,8 +115,6 @@ class SalesforceClient:
             self.api.bulk.Contact.insert(data)
         except ss.SalesforceError as e:
             error(f"Contact write failure. {e.message}")
-        else:
-            info(f"Contacts uploaded.")
 
     def complete_enrichment(self, accounts: list) -> None:
         """ Write `Notes__c` and  `Enrichment_Complete__c` on given accounts. 
@@ -131,5 +131,7 @@ class SalesforceClient:
                 }
             )
 
-        self.api.bulk.Account.update(data)
-        info(f"Enrichment completed.")
+        try:
+            self.api.bulk.Account.update(data)
+        except ss.SalesforceError as e:
+            error(f"Account write failure. {e.message}")

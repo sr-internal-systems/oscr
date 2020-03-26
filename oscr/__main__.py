@@ -26,14 +26,16 @@ def run():
 
     info("Collecting accounts.")
     accounts: Generator = sfc.get_accounts()
+    info("Accounts retrieved.")
 
     try:
-        info("Enriching accounts.")
+        info("Launching enrichment process.")
         completed_contacts = []
         completed_accounts = []
         while accounts:
             account = next(accounts)
             contacts, company_info, summary = enrich(sfc, doc, account)
+            info(f"Data prepared for {account.name}.")
 
             completed_contacts.extend(contacts)
 
@@ -41,9 +43,16 @@ def run():
             completed_accounts.append(account)
 
     except StopIteration:
-        info("Uploading contacts.")
-        sfc.upload_contacts(completed_contacts)
-        sfc.complete_enrichment(completed_accounts)
+        if completed_contacts:
+            info(f"Uploading {len(completed_contacts)} contacts.")
+            sfc.upload_contacts(completed_contacts)
+            info("Upload complete.")
+
+        if completed_accounts:
+            info(f"Completing enrichment on {len(completed_accounts)} accounts.")
+            sfc.complete_enrichment(completed_accounts)
+            info("Enrichment complete.")
+
         pass
     finally:
         del accounts

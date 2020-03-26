@@ -7,7 +7,6 @@ This module implements utility methods for the API.
 
 import re
 from datetime import datetime
-from logging import info
 from statistics import mean
 from time import strftime
 
@@ -55,10 +54,17 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
     summary: str = format_enrichment_summary(sf_contacts, do_contacts, contacts)
 
     if contacts:
-        data: list = _prepare_contacts(account, contacts)
-        return data, company_info, summary
+        completed_contacts: list = _prepare_contacts(account, contacts)
     else:
-        return [], company_info, summary
+        completed_contacts: list = []
+
+    if not company_info:
+        company_info = ""
+
+    if not summary:
+        summary = ""
+
+    return completed_contacts, company_info, summary
 
 
 def _filter(contacts: list) -> list:
