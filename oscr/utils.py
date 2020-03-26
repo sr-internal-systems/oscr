@@ -92,7 +92,7 @@ def _filter(contacts: list) -> list:
     contacts: list = contacts[: int(len(contacts) / 3)] if len(
         contacts
     ) >= 45 else contacts
-    contacts: list = contacts[:100] if len(contacts) > 100 else contacts
+    contacts: list = contacts[:60] if len(contacts) > 60 else contacts
 
     return contacts
 
