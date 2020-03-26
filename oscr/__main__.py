@@ -29,10 +29,21 @@ def run():
 
     try:
         info("Enriching accounts.")
+        completed_contacts = []
+        completed_accounts = []
         while accounts:
-            enrich(sfc, doc, next(accounts))
+            account = next(accounts)
+            contacts, company_info, summary = enrich(sfc, doc, account)
+
+            completed_contacts.extend(contacts)
+
+            account.notes: str = "<br><br>".join([company_info, summary])
+            completed_accounts.append(account)
+
     except StopIteration:
-        info("Account generator exhausted.")
+        info("Uploading contacts.")
+        sfc.upload_contacts(completed_contacts)
+        sfc.complete_enrichment(completed_accounts)
         pass
     finally:
         del accounts

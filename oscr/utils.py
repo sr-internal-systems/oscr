@@ -47,7 +47,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
                 and contact.email != ""
                 and contact.name not in names
                 and contact.email not in emails
-                and re.findall(r"@(\w.+)", contact.email)[0] not in domains
+                and re.findall(r"@(\w.+)", contact.email)[0] in domains
             )
         ]
     )
@@ -55,13 +55,10 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
     summary: str = format_enrichment_summary(sf_contacts, do_contacts, contacts)
 
     if contacts:
-        sfc.upload_contacts(account, contacts)
-
-    if company_info and summary:
-        sfc.upload_notes(account, company_info, summary)
-
-    if summary:
-        sfc.complete_enrichment(account)
+        data: list = _prepare_contacts(account, contacts)
+        return data, company_info, summary
+    else:
+        return [], company_info, summary
 
 
 def _filter(contacts: list) -> list:
@@ -89,9 +86,35 @@ def _filter(contacts: list) -> list:
     contacts: list = contacts[: int(len(contacts) / 3)] if len(
         contacts
     ) >= 45 else contacts
-    contacts: list = contacts[:100] if len(contacts) > 50 else contacts
+    contacts: list = contacts[:100] if len(contacts) > 100 else contacts
 
     return contacts
+
+
+def _prepare_contacts(account: Account, contacts: list) -> None:
+    """ Prepare contacts for bulk upload. 
+        
+    :param account: An `Account` object.
+    :param contacts: A `list` of `Contact` objects.
+    """
+    data: list = []
+    for contact in contacts:
+        name: list = contact.name.split()
+        data.append(
+            {
+                "AccountId": account.salesforce_id,
+                "OwnerId": account.prep,
+                "FirstName": name[0],
+                "LastName": name[1] if len(name) > 1 else "",
+                "Title": contact.title or "",
+                "Phone": contact.direct or "",
+                "MobilePhone": contact.mobile or "",
+                "Email": contact.email or "",
+                "LeadSource": "DiscoverOrg",
+            }
+        )
+
+    return data
 
 
 def format_company_info(info_dict):
