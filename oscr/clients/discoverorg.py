@@ -7,6 +7,7 @@ This module contains a high-level DiscoverOrg API client class.
 
 import json
 import os
+import time
 from logging import info, warning
 
 from oscr.models import Account, Contact
@@ -87,9 +88,15 @@ class DiscoverOrgClient:
 
         response: rq.Response = rq.post(url, headers=headers, data=data)
 
+        breakpoint
+
         if response.status_code == 200:
             data: dict = json.loads(response.text)
             records: list = data.get("content", [])
+        elif response.status_code == 429:
+            wait = int(response.headers.get("X-Rate-Limit-Reset")) - time.time()
+            time.sleep(int(wait))
+            self.get_company_info(account)
         else:
             warning(f"Couldn't retrieve company info records for {account.name}.")
             records: list = []
@@ -108,48 +115,50 @@ class DiscoverOrgClient:
 
         :param account: An `Account` object.
         """
-        url: str = "".join([self.base, "/v1/search/persons"])
+        base: str = "".join([self.base, "/v1/search/persons"])
         headers: dict = {
             "X-PARTNER-KEY": self.key,
             "X-AUTH-TOKEN": self.session,
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
-        data: str = json.dumps({"companyCriteria": {"websiteUrls": [account.domain]}})
+        body: str = json.dumps({"companyCriteria": {"websiteUrls": [account.domain]}})
+        page = 0
 
-        response: rq.Response = rq.post(url=url, headers=headers, data=data)
+        records: list = []
+        while True:
+            url: str = f"{base}?pageNumber={page}"
+            response: rq.Response = rq.post(url=url, headers=headers, data=body)
 
-        if response.status_code == 200:
-            data: dict = json.loads(response.text)
-            records: list = data.get("content", [])
-        else:
-            warning(f"Couldn't retrieve contact records for {account.name}.")
-            records: list = []
+            if response.status_code == 200:
+                data: dict = json.loads(response.text)
+                records.extend(data.get("content", []))
+
+                if data["last"] is False:
+                    page += 1
+                    continue
+                else:
+                    break
+            elif response.status_code == 429:
+                wait = int(response.headers.get("X-Rate-Limit-Reset")) - time.time()
+                time.sleep(int(wait))
+                continue
+            else:
+                warning(f"Couldn't retrieve contact records for {account.name}.")
+                break
 
         while records:
             record: dict = records.pop(0)
 
-            name = record.get("fullName", "")
-            title = record.get("title", "")
-            direct = record.get("officeTelNumber", "")
-            mobile = record.get("mobileTelNumber", "")
-            email = record.get("email", "")
-
-            if "@" in email and email.split("@")[1] != account.domain:
-                continue
-
-            if not email and not direct and not mobile:
-                continue
-
             yield Contact(
                 account=account.salesforce_id,
                 salesforce_id="",
-                name=name,
-                title=title,
+                name=record.get("fullName", ""),
+                title=record.get("title", ""),
                 office=account.phone,
-                direct=direct,
-                mobile=mobile,
-                email=email,
+                direct=record.get("officeTelNumber", ""),
+                mobile=record.get("mobileTelNumber", ""),
+                email=record.get("email", ""),
                 rating=10,
                 priority=10,
                 status="new",
