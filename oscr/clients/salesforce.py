@@ -32,7 +32,6 @@ class SalesforceClient:
             password=os.getenv("SF_PASSWORD"),
             security_token=os.getenv("SF_TOKEN"),
             organizationId=os.getenv("SF_ORG_ID"),
-            domain="test",
         )
 
     def get_accounts(self) -> Generator[Account, None, None]:
