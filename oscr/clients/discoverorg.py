@@ -8,7 +8,7 @@ This module contains a high-level DiscoverOrg API client class.
 import json
 import os
 import time
-from logging import warning
+from logging import info, warning
 
 from oscr.models import Account, Contact
 
@@ -88,14 +88,14 @@ class DiscoverOrgClient:
 
         response: rq.Response = rq.post(url, headers=headers, data=data)
 
-        breakpoint
-
         if response.status_code == 200:
             data: dict = json.loads(response.text)
             records: list = data.get("content", [])
         elif response.status_code == 429:
             wait = int(response.headers.get("X-Rate-Limit-Reset")) - time.time()
+            info(f"Rate limit reached. Cooling for {wait} seconds.")
             time.sleep(int(wait))
+            info("Cooling complete. Continuing retrieval.")
             self.get_company_info(account)
         else:
             warning(f"Couldn't retrieve company info records for {account.name}.")
@@ -123,11 +123,12 @@ class DiscoverOrgClient:
             "Content-Type": "application/json",
         }
         body: str = json.dumps({"companyCriteria": {"websiteUrls": [account.domain]}})
-        page = 0
+        page: int = 0
 
         records: list = []
-        while True:
+        while True and page <= 10:
             url: str = f"{base}?pageNumber={page}"
+
             response: rq.Response = rq.post(url=url, headers=headers, data=body)
 
             if response.status_code == 200:
@@ -140,8 +141,10 @@ class DiscoverOrgClient:
                 else:
                     break
             elif response.status_code == 429:
-                wait = int(response.headers.get("X-Rate-Limit-Reset")) - time.time()
+                wait = abs(int(response.headers.get("X-Rate-Limit-Reset")))
+                info(f"Rate limit reached. Cooling for {wait} seconds.")
                 time.sleep(int(wait))
+                info("Cooling complete. Continuing retrieval.")
                 continue
             else:
                 warning(f"Couldn't retrieve contact records for {account.name}.")
