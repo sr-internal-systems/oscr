@@ -15,13 +15,13 @@ import simple_salesforce as ss
 
 
 class SalesforceClient:
-    """ Implement the `SalesforceClient` class.
+    """Implement the `SalesforceClient` class.
 
     This class contains a high-level controlled interface for interacting with the
     Salesforce API within the context of the OSCR system.
 
     It requires the presence of a username, password, token, and organization ID
-    in order to authenticate properly with the API. Those values must be stored in 
+    in order to authenticate properly with the API. Those values must be stored in
     environment variables `SF_USERNAME`, `SF_PASSWORD`, `SF_TOKEN`, and `SF_ORG_ID`
     respectively.
     """
@@ -35,8 +35,8 @@ class SalesforceClient:
         )
 
     def get_accounts(self) -> Generator[Account, None, None]:
-        """ Yield a generator of all accounts where enrichment is requested. 
-        
+        """Yield a generator of all accounts where enrichment is requested.
+
         This method, if no `Enrichment_Requested_By__c` value is present,
         requires the presence of a default user value to fulfill the contact
         ownership field in the environment variable `SF_DEFAULT_USER`.
@@ -72,7 +72,7 @@ class SalesforceClient:
             count += 1
 
     def get_contacts(self, account: Account) -> Generator[Contact, None, None]:
-        """ Yield a generator of contacts for a given account.
+        """Yield a generator of contacts for a given account.
 
         :param account: An `Account` object.
         """
@@ -106,8 +106,8 @@ class SalesforceClient:
             )
 
     def upload_contacts(self, data: list):
-        """ Write all new contacts to Salesforce.
-        
+        """Write all new contacts to Salesforce.
+
         :param: A `list` of formatted contact data `dict` objects.
         """
         try:
@@ -116,8 +116,8 @@ class SalesforceClient:
             error(f"Contact write failure. {e.message}")
 
     def complete_enrichment(self, accounts: list) -> None:
-        """ Write `Notes__c` and  `Enrichment_Complete__c` on given accounts. 
-        
+        """Write `Notes__c` and  `Enrichment_Complete__c` on given accounts.
+
         :param account: A `list` of `Account` objects.
         """
         data = []

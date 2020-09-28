@@ -13,7 +13,7 @@ from selenium import webdriver
 
 
 class LinkedInClient:
-    """ Implement the `LinkedInClient` class.
+    """Implement the `LinkedInClient` class.
 
     This class provides a high-level interface for collecting data
     via a system of web scrapers/drivers.
@@ -27,7 +27,7 @@ class LinkedInClient:
         self._login(username, password)
 
     def _login(self, username: str, password: str):
-        """ Log into LinkedIn via a Selenium ChromeDriver.
+        """Log into LinkedIn via a Selenium ChromeDriver.
 
         :param username: A valid `str` LinkedIn username.
         :param password: A valid `str` LinkedIn password.
@@ -41,4 +41,3 @@ class LinkedInClient:
         password_input.send_keys(password)
 
         password_input.submit()
-

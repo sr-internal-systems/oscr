@@ -14,7 +14,7 @@ from oscr.clients.salesforce import SalesforceClient
 
 
 def run():
-    """ Collects and enriches accounts.
+    """Collects and enriches accounts.
 
     This method contains a mechanism to remove any duplicate contacts
     from DiscoverOrg that may already exist in Salesforce. It also calls on the

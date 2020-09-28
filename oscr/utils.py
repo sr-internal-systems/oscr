@@ -17,8 +17,8 @@ from oscr.clients.salesforce import SalesforceClient
 
 
 def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> None:
-    """ Enrich a given account. 
-    
+    """Enrich a given account.
+
     :param sfc: A `SalesforceClient` instance.
     :param doc: A `DiscoverOrgClient` instance.
     :param account: An `Account` object.
@@ -32,7 +32,9 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
     names: list = [c.name for c in sf_contacts]
     emails: list = [c.email for c in sf_contacts]
     domains: list = [
-        re.findall(r"@(\w.+)", c.email)[0] for c in sf_contacts if c.email and "@" in c.email
+        re.findall(r"@(\w.+)", c.email)[0]
+        for c in sf_contacts
+        if c.email and "@" in c.email
     ] + re.findall(
         r"^(?:https?://)?(?:[^@/\n]+@)?(?:www\.)?([^:/?\n]+)", account.domain or ""
     )
@@ -68,7 +70,7 @@ def enrich(sfc: SalesforceClient, doc: DiscoverOrgClient, account: Account) -> N
 
 
 def _filter(contacts: list) -> list:
-    """ Filter a given list of contacts for writing to Salesforce.
+    """Filter a given list of contacts for writing to Salesforce.
 
     This method uses the 'Scarce' selection algorithm. Documentation of
     this algorithm can be found in the `docs` section of the main OSCR repository.
@@ -89,17 +91,17 @@ def _filter(contacts: list) -> list:
                 break
 
     contacts: list = sorted(contacts, key=lambda c: c.rating + c.priority)
-    contacts: list = contacts[: int(len(contacts) / 3)] if len(
-        contacts
-    ) >= 45 else contacts
+    contacts: list = (
+        contacts[: int(len(contacts) / 3)] if len(contacts) >= 45 else contacts
+    )
     contacts: list = contacts[:60] if len(contacts) > 60 else contacts
 
     return contacts
 
 
 def _prepare_contacts(account: Account, contacts: list) -> None:
-    """ Prepare contacts for bulk upload. 
-        
+    """Prepare contacts for bulk upload.
+
     :param account: An `Account` object.
     :param contacts: A `list` of `Contact` objects.
     """
@@ -124,16 +126,16 @@ def _prepare_contacts(account: Account, contacts: list) -> None:
 
 
 def format_company_info(info_dict):
-    """ Produce a field-friendly string from a dictionary of company data. 
-    
-    :param info_dict: A `dict` of company info produced by the 
+    """Produce a field-friendly string from a dictionary of company data.
+
+    :param info_dict: A `dict` of company info produced by the
                       `DiscoverOrgClient`'s `get_company_info` function.
     :return: A formatted `str` of company info.
     """
     overview: str = info_dict.get("description", "<i>Not found.</i>")
     size: str = info_dict.get("numEmployees", "<i>Not found.</i>")
     revenue: str = info_dict.get("revenue", "<i>Not found.</i>")
-    location: dict = info_dict.get("location")
+    location: dict = info_dict.get("location", {})
     headquarters: str = ", ".join(
         [
             location.get("city", "<i>N/A</i>"),
@@ -158,8 +160,8 @@ def format_company_info(info_dict):
 def format_enrichment_summary(
     sf_contacts: list, do_contacts: list, contacts: list
 ) -> str:
-    """ Produce a field-friendly string summarizing the enrichment process. 
-    
+    """Produce a field-friendly string summarizing the enrichment process.
+
     :param sf_contacts: A `list` of `Contact` objects produced by the
                         `SalesforceClient`'s `get_contacts` function.
     :param do_contacts: A `list` of `Contact` objects produced by the
