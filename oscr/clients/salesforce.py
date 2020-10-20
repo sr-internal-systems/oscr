@@ -125,7 +125,7 @@ class SalesforceClient:
             data.append(
                 {
                     "Id": str(account.salesforce_id),
-                    "Notes__c": account.notes,
+                    "Enrichment_Notes__c": account.notes,
                     "Enrichment_Complete__c": True,
                 }
             )
